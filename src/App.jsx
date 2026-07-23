@@ -1,6 +1,6 @@
-import React from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "react-hot-toast"; // <-- 1. IMPORTA ESTO
+import { Toaster } from "react-hot-toast";
 
 import Header from "./components/Header";
 import Home from "./views/Home";
@@ -8,12 +8,12 @@ import Login from "./views/Login";
 import DetalleProducto from "./views/DetalleProducto";
 
 function App() {
-  const [busqueda, setBusqueda] = React.useState("");
-  const [cantidad, setCantidad] = React.useState(0);
+  const [busqueda, setBusqueda] = useState("");
+  const [cantidad, setCantidad] = useState(0);
 
   return (
     <Router>
-      {/* 2. COLOCA EL CONTENEDOR DE TOASTS AQUÍ */}
+      {/* Contenedor global de notificaciones */}
       <Toaster position="top-center" reverseOrder={false} />
       
       <Header cantidad={cantidad} busqueda={busqueda} setBusqueda={setBusqueda} />
