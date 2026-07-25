@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Importamos Link para la navegación al detalle
+import Card from "../components/Card"; // 1. Importamos tu componente Card
 
-// 1. Recibimos 'busqueda' como una prop desde App.jsx
 const Home = ({ setCantidad, busqueda = "" }) => {
   const [misProductos, setMisProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -15,11 +14,9 @@ const Home = ({ setCantidad, busqueda = "" }) => {
         if (data.documents) {
           const datosLimpios = data.documents.map((doc) => {
             const campos = doc.fields;
-            // Obtenemos el ID del documento como última opción segura
             const idDocumento = doc.name.split("/").pop();
 
             return {
-              // Mapeamos de forma segura los valores de Firestore
               id: campos.id?.integerValue || campos.id?.doubleValue || idDocumento,
               nombre: campos.nombre?.stringValue || "Producto sin nombre",
               descripcion: campos.descripcion?.stringValue || "Sin descripción disponible.",
@@ -36,7 +33,7 @@ const Home = ({ setCantidad, busqueda = "" }) => {
           });
           setMisProductos(datosLimpios);
         }
-        setCargando(false)
+        setCargando(false);
       })
       .catch((error) => {
         console.error("Error al traer los datos de Firebase:", error);
@@ -48,7 +45,6 @@ const Home = ({ setCantidad, busqueda = "" }) => {
     setCantidad((prev) => prev + 1);
   };
 
-  // 2. Filtro ultra-reactivo y seguro de productos (limpia espacios en blanco con .trim())
   const productosFiltrados = misProductos.filter((prod) => {
     const nombreProducto = prod.nombre ? prod.nombre.toLowerCase() : "";
     const textoBusqueda = (busqueda || "").toLowerCase().trim();
@@ -57,62 +53,49 @@ const Home = ({ setCantidad, busqueda = "" }) => {
 
   if (cargando) {
     return (
-      <div className="text-center py-10">
-        <p className="text-gray-500 animate-pulse text-lg">Cargando catálogo desde Firebase...</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <svg
+          className="animate-spin h-10 w-10 text-blue-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <p className="text-gray-500 text-sm font-semibold">Cargando catálogo desde Firebase...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* GRILLA DE PRODUCTOS / SERVICIOS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {productosFiltrados.length > 0 ? (
           productosFiltrados.map((prod) => (
-            <div key={prod.id} className="bg-white border rounded-lg p-4 shadow-sm flex flex-col justify-between relative overflow-hidden">
-              
-              {/* Etiqueta de Descuento */}
-              {prod.descuento && (
-                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
-                  {prod.descuento}
-                </span>
-              )}
-
-              <img 
-                src={prod.imagen} 
-                alt={prod.nombre} 
-                className="w-full h-40 object-cover rounded-md mb-3"
+            <div key={prod.id} className="flex flex-col justify-between">
+              {/* 2. Reutilizamos tu componente Card pasándole las props correctas */}
+              <Card
+                nombre={prod.nombre}
+                descripcion={prod.descripcion}
+                precio={prod.precio}
+                precioAnterior={prod.precioAnterior > 0 ? prod.precioAnterior : null}
+                descuento={prod.descuento}
+                imagen={prod.imagen}
+                alAgregar={agregarAlCarrito}
               />
               
-              <div className="flex-grow">
-                <h3 className="font-bold text-lg text-gray-800">{prod.nombre}</h3>
-                <p className="text-sm text-gray-600 my-2 line-clamp-2">{prod.descripcion}</p>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl font-extrabold text-blue-600">S/. {prod.precio.toFixed(2)}</span>
-                  {prod.precioAnterior > 0 && (
-                    <span className="text-sm text-gray-400 line-through">S/. {prod.precioAnterior.toFixed(2)}</span>
-                  )}
-                </div>
-
-                {/* Enlace dinámico para ir al detalle */}
-                <Link
-                  to={`/producto/${prod.id}`}
-                  className="block text-center w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm mb-2"
-                >
-                  Ver Detalles
-                </Link>
-
-                <button
-                  onClick={agregarAlCarrito}
-                  className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  Contratar Servicio
-                </button>
-              </div>
-
+              {/* 3. Botón adicional para ir al detalle (ya que Card no lo traía por defecto) */}
+              <a
+                href={`/producto/${prod.id}`}
+                className="mt-2 block text-center w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-xl hover:bg-gray-300 transition-colors text-sm"
+              >
+                Ver Detalles
+              </a>
             </div>
           ))
         ) : (
@@ -123,6 +106,10 @@ const Home = ({ setCantidad, busqueda = "" }) => {
       </div>
     </div>
   );
+};
+
+Home.defaultProps = {
+  busqueda: "",
 };
 
 export default Home;
